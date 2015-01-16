@@ -1,0 +1,15 @@
+﻿{
+  "subject": "YOURSecPass",
+  "payload": {
+    "sessEmail": "api@parature.com",
+    "cFname": "Parature",
+    "cLname": "Tester",
+    "cEmail": "parature_tester@parature.com",
+    "cPassword": "password",
+    "cStatus": "REGISTERED",
+    "cUname" : "userName",
+    "cTou": "1",
+    "amName": "<userAssociatedAccountNAme>",
+    "deptID": "<yourDepartmentID>"    
+  }
+}
