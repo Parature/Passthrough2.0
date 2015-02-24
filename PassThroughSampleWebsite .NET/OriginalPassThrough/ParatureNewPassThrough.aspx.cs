@@ -89,34 +89,26 @@ namespace PassThrough
             requestToPing.Headers.Add(instanceIdParamName, securePassThroughPingFedInstanceID);
 
             //am constructing the JSON payload with required information. you can take a look at the sample payload here samplePayloadThatsSentToSS0-Mutual-Auth.txt
-            var payload = new StringBuilder();
-
-            payload.Append("{");
-
-            payload.Append(string.Format("\"subject\": \"{0}\",", securePassThroughPingFedInstanceID));
-            payload.Append("\"payload\":");
-
-            payload.Append("{");
-            payload.Append("\"sessEmail\": \"" + sessEmail + "\",");
-            payload.Append("\"cFname\": \"" + firstName + "\",");
-            payload.Append("\"cLname\": \"" + lastName + "\",");
-            payload.Append("\"cEmail\": \"" + emailID + "\",");
-            payload.Append("\"cPassword\": \"" + password + "\",");
-            payload.Append("\"cStatus\": \"REGISTERED\",");
-            payload.Append("\"cUname\" : \"" + userID + "\",");
-            payload.Append("\"cTou\": \"1\","); // 1 is accepting terms and conditions
-            payload.Append("\"amName\": \"" + accountName + "\",");
-            payload.Append("\"deptID\": \"" + departmentID.ToString() + "\",");
-
-            payload.Append("\"customKeyValuesAllowed\" : \"CustomFieldValue\""); // Note: you can pass custom values to update Customer fields after configuring them in the back end. you can ignore if you dont need these custom values. 
-
-            payload.Append("}");
-
-            payload.Append("}");
-
+            var payloadObj = new {
+                subject = securePassThroughPingFedInstanceID,
+                payload = new {
+                    sessEmail = sessEmail,
+                    cFname = firstName,
+                    cLname = lastName,
+                    cEmail = emailID,
+                    cPassword = password,
+                    cStatus = "REGISTERED",
+                    cUname = userID,
+                    cTou = "1", // 1 is accepting terms and conditions
+                    amName = accountName,
+                    deptID = departmentID.ToString(),
+                    customKeyValuesAllowed = "CustomFieldValue" // Note: you can pass custom values to update Customer fields after configuring them in the back end. you can ignore if you dont need these custom values. 
+                }
+            };
+            
             using (var sr = new StreamWriter(requestToPing.GetRequestStream()))
             {
-                sr.Write(payload.ToString());
+                sr.Write(JsonConvert.SerializeObject(payloadObj));
             }
 
             // read response from Parature and grab the REF parameter
