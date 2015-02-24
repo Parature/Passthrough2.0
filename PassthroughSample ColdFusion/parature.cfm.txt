@@ -1,0 +1,55 @@
+<cfset LOCAL.securePassThroughPingFedInstanceID = 'YOURSecurePassthroughInstanceIDWhichWeGaveYou'>
+
+<!--- use a string instead of serializeJSON(array) since do not want field names in upper case --->
+<cfset LOCAL.payload = '{
+  "subject": "#LOCAL.securePassThroughPingFedInstanceID#",
+  "payload": {
+    "sessEmail": "#sessEmail#",
+    "cFname": "#cFname#",
+    "cLname": "#cLname#",
+    "cEmail": "#cEmail#",
+    "cPassword": "#cPassword#",
+    "cStatus": "REGISTERED",
+    "cUname": "#cUname#",
+    "cTou": "1",
+    "amName": "#amName#",
+    "deptID": "9999",
+
+  }
+}'>
+
+<cfset LOCAL.dropOffURL = 'https://sso-mutual-auth.parature.com/ext/ref/dropoff'>
+
+<cfset LOCAL.clientcertPath = 'parature.pkcs'>
+<cfset LOCAL.password = '*****'>
+
+<cfhttp method="POST" url="#LOCAL.dropOffURL#"
+		clientcert="#LOCAL.clientcertPath#"
+		clientcertpassword="#LOCAL.password#"
+		result="pingResponse">
+			
+    <cfhttpparam type="header" name="ping.instanceId" value="#LOCAL.securePassThroughPingFedInstanceID#" />
+    <cfhttpparam type="header" name="Content-Type" value="application/json" />
+    <cfhttpparam type="body" value="#LOCAL.payload#">
+</cfhttp>
+
+<cfset LOCAL.content = pingResponse.Filecontent>
+
+<cfset LOCAL.deserializedContent = deserializeJSON(LOCAL.content)>
+
+<html>
+<body>
+<cfoutput>
+<cfif isdefined("screencast")>
+	<form name="supportform" method="post" action="screencastTicket.cfm">
+<cfelse>
+	<form name="supportform" method="post" action="http://www.yourparaturewebsite/ics/support/security2.asp?deptID=9999">
+</cfif>
+		<input type="hidden" name="refID" value="#LOCAL.deserializedContent.REF#">
+		<input type="hidden" name="instanceID" value="#LOCAL.securePassThroughPingFedInstanceID#">
+	
+</form>
+</cfoutput>
+</body>
+</html>
+
