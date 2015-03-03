@@ -41,7 +41,7 @@ namespace PassthroughWebAPI.Controllers
 
             var collection = new X509Certificate2Collection();
             //add your cert to appData then mark it Type : None, copy : Always.
-            collection.Import(HostingEnvironment.MapPath("~/bin/App_Data/YourCert.pfx"), "p", X509KeyStorageFlags.PersistKeySet);
+            collection.Import(HostingEnvironment.MapPath("~/bin/App_Data/YourCert.pfx"), "password", X509KeyStorageFlags.PersistKeySet);
 
 
             var requestToPing = (HttpWebRequest)WebRequest.Create(dropOffURL);
