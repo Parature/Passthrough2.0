@@ -330,7 +330,6 @@ public class ParatureAPI {
       log.info(FName + ", " + LName + ", " + SecurePassThroughPingFedInstanceID);
       String module = "Customer";
       String retvalue = "";
-      //https://s6.parature.com/api/v1/16054/16061/Customer?User_Name=970067235&_token_=XQqyjWG1sfWK1U1IxmAXHb9j2gq5wfKNx7Zf1qGesRbOFRco2@6yAjrIutaBBvXeEqKnicMrnBbXJqtqan17RA==
       String GetURL = "https://" + ParatureConfig.getHostname() + "/api/v1/" + ParatureConfig.getAccountID() + "/" + ParatureConfig.getClientID() + "/" + module + "?User_Name="+username+"&_token_=" + ParatureConfig.getAPIToken();
       HttpClient client = new HttpClient();
       client.getHttpConnectionManager().getParams().setConnectionTimeout(5000);
