@@ -1,11 +1,7 @@
 
 
-package edu.tcc.ssowebgateway.parature;
+package yourNamespace.parature;
 
-import edu.tcc.ssowebgateway.ConfigResourceBean;
-import edu.tcc.ssowebgateway.DatabaseResourceBean;
-import edu.tcc.ssowebgateway.userinfo.TCCUserInfoBase;
-import edu.tcc.ssowebgateway.userinfo.TCCUserInfoByUsername;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -45,19 +41,9 @@ import org.apache.commons.logging.LogFactory;
  **/
 public class ParatureAPI {
 
-  private String baseURL = "https://%s/api/v1/%s/%s/";
+  
   private String SecurePassThroughPingFedInstanceID = "";
-  private static String NewCustomerXML = "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n"+
-                                          "<Customer>" +
-                                          "<Email>%s</Email>"+
-                                          "<First_Name>%s</First_Name>"+
-                                          "<Last_Name>%s</Last_Name>"+
-                                          "<User_Name>%s</User_Name>"+
-                                          "<Password>%s</Password>"+
-                                          "<Password_Confirm>%s</Password_Confirm>"+
-                                          //"<Account><Account id=\"%s\"/></Account>"+
-                                          "<Sla><Sla id=\"%s\"/></Sla>"+
-                                          "<Status><Status id=\"2\" /></Status></Customer>";
+ 
   private ConfigParatureBean ParatureConfig;
   private ConfigResourceBean MainConfig;
   private DatabaseResourceBean DBConfig;
@@ -69,42 +55,15 @@ public class ParatureAPI {
    * Initialize the Parature API
    **/
   public ParatureAPI(ConfigParatureBean config,ConfigResourceBean mainconfig,DatabaseResourceBean DBConfig) {
-        this.ParatureConfig = config;
-        MainConfig = mainconfig;
-        this.DBConfig = DBConfig;
-        baseURL = String.format(baseURL, config.getHostname(),config.getClientID(),config.getAccountID());
-        SecurePassThroughPingFedInstanceID = ParatureConfig.getSecurePassThroughPingFedInstanceID();
-        DeptID = ParatureConfig.getClientID();
-        SSOAuthHost = ParatureConfig.getSSOAuthHost();
-        SessEmail = ParatureConfig.getAdminEmail();
+       
+        
+        SecurePassThroughPingFedInstanceID = 'YourPassthroughInstanceIDWeSharedWithYou";
+        DeptID = "1234"; //your Department ID
+        
+        SessEmail = "AnyActiveParatureCSR@yourCompany.com";
   }
 
-  /**
-  * Takes a username and creates the user in parature if not already present
-  * then initializes variables that will carry user attributes during the authentication process. 
-  * The method call to GetSecurePassThroughRefID is Step One of the Passthrough 2.0 process. 
-  * Step Two is a form submission that is handled in the WEB-INF/view/toparature.jsp file. 
-  **/
-  public void PreparePassThroughUser(String username, String task, String deptID)
-  {     
-      Task = task;
-      log.info("Preparing user fields for user:"+username);
-      TCCUserInfoByUsername user_info = new TCCUserInfoByUsername(MainConfig,DBConfig);
-      if(user_info.GetUserInfoByAttribute(username))
-      {
-         if(!CheckForUserInParature(user_info))         
-            CreateUserInParature(user_info,user_info.isStudent()?"Students":"Employees");
-         else
-             log.debug("User found in parature:"+username);
-         FName = user_info.getFirstName();
-         LName = user_info.getLastName();
-         Email = user_info.getEmail();
-         SID = user_info.getSID();
-         SessID = HashEmail();
-         SLAName = HashSLA(user_info.isStudent()?"Students":"Employees");
-         RefID = GetSecurePassThroughRefID(FName, LName, Email, SID);
-      }
-  }
+  
   
   /**
    * Handles Step One of the Parature PassThrough 2.0 process. 
@@ -298,144 +257,5 @@ public class ParatureAPI {
        return MD5Hash(SLA);
   }
 
-  private String HashEmail()
-  {
-      return MD5Hash(SID+ParatureConfig.getAdminPass());
-  }
-
-  public String getDropOffURL() 
-  {
-      return ParatureAPI.DROP_OFF_URL;
-  }
   
-  public String getRedirectURL()
-  {
-      return this.createPassthroughURL();
-  }
-
-  /**
-  * Checks to see if user is in parature or not
-  * @param username Student/Staff username
-  * @return True or false if user exists in Parature
-  */
-  private boolean CheckForUserInParature(TCCUserInfoBase user_info)
-  {
-      String allcust = GetOneCustomer(user_info.getSID());
-      return allcust.length()>0;
-  }
-
-  private String GetOneCustomer(String username)
-  {
-      log.info("Searching for customer:"+username);
-      log.info(FName + ", " + LName + ", " + SecurePassThroughPingFedInstanceID);
-      String module = "Customer";
-      String retvalue = "";
-      String GetURL = "https://" + ParatureConfig.getHostname() + "/api/v1/" + ParatureConfig.getAccountID() + "/" + ParatureConfig.getClientID() + "/" + module + "?User_Name="+username+"&_token_=" + ParatureConfig.getAPIToken();
-      HttpClient client = new HttpClient();
-      client.getHttpConnectionManager().getParams().setConnectionTimeout(5000);
-      GetMethod tokenGET = new GetMethod(GetURL);
-      // Execute the request and check if it was successful
-      try {
-            int status = client.executeMethod(tokenGET);
-            if(status!=HttpStatus.SC_OK)
-                throw new Exception("HTTP Request failed with code:"+new Integer(status).toString());
-            retvalue = tokenGET.getResponseBodyAsString();
-            if(retvalue.indexOf("<Customer")<0)
-                retvalue = "";
-      }
-      catch(Exception ex)
-      {
-          log.error("Error getting customers from Parature API:"+ex.getMessage()+" URL:"+GetURL);
-      }
-      return retvalue;
-  }
-
-  private Integer SLANToId(String SLAName)
-  {
-      if(SLAName.equalsIgnoreCase("Students"))
-          return 2;
-      else if(SLAName.equalsIgnoreCase("Employees"))
-          return 3;
-      else
-          return -1;
-  }
-
-  private boolean CreateUserInParature(TCCUserInfoBase user_info,String SLAName)
-  {
-      log.info("About to create parature user for:"+user_info.getEmail());
-      String PostXML = String.format(NewCustomerXML, user_info.getEmail(),
-                                    user_info.getFirstName(),user_info.getLastName(),user_info.getSID(),
-                                    MD5Hash(user_info.getUsername()),MD5Hash(user_info.getUsername()),
-                                    SLANToId(SLAName).toString());
-      HttpClient client = new HttpClient();
-      client.getHttpConnectionManager().getParams().setConnectionTimeout(5000);
-      String module = "Customer";
-      String PostURL = "https://" + ParatureConfig.getHostname() + "/api/v1/" + ParatureConfig.getAccountID() + "/" + ParatureConfig.getClientID() + "/" + module + "?_token_=" + ParatureConfig.getAPIToken();
-      PostMethod postReq = new PostMethod(PostURL);
-      try {
-          postReq.setRequestHeader("Content-Type","text/xml");
-          postReq.setRequestBody(PostXML);
-          client.executeMethod(postReq);
-          String response_body = postReq.getResponseBodyAsString();
-          return response_body.indexOf("<Customer")>0;
-      }
-      catch(Exception ex)
-      {
-          log.error("Unable to create user:"+user_info.getEmail()+" reason:"+ex.getMessage()+" URL:"+PostURL);
-          return false;
-      }
-  }
-
-    public String getEmail() {
-        return Email;
-    }
-
-    public String getFName() {
-        return FName;
-    }
-
-    public String getLName() {
-        return LName;
-    }
-
-    public String getSessEmail() {
-        return SessEmail;
-    }
-
-    public String getSessID() {
-        return SessID;
-    }
-
-    public String getSID() {
-        return SID;
-    }
-
-    public String getSLAName() {
-        return SLAName;
-    }
-    
-    public String getRefID() {
-        return RefID;
-    }
-    
-    public String getSecurePassThroughPingFedInstanceID() {
-        return SecurePassThroughPingFedInstanceID;
-    } 
-
-  /**
-   * Simple helper method that concatenates the baseURL to the query params and then appends the authentication token
-   * @param params Parameters to pass to the API
-   */
-  private String createAPIURL(String params) {
-    return baseURL + params + "_token_=" + ParatureConfig.getAPIToken();
-  }
-
-  private String createPassthroughURL()
-  {
-      if(!Task.equalsIgnoreCase("chat"))
-         return "http://"+ParatureConfig.getHostname()+"/ics/support/security2.asp?deptID="+((DeptID==null)?ParatureConfig.getClientID():DeptID);
-      else
-          return MainConfig.getParatureChatURL();
-  }
-
 }
