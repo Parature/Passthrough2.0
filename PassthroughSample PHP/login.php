@@ -68,6 +68,9 @@
         curl_setopt($ch, CURLOPT_SSLCERT, $publicKey);
         curl_setopt($ch, CURLOPT_SSLKEY, $privateKey);
 
+		/* Make sure we're using TLS not SSLv2 or SSLv3 */
+		curl_setopt($ch, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1);
+		
         $response = curl_exec($ch);
 
         if (!$response) {
