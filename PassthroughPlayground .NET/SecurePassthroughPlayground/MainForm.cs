@@ -16,7 +16,7 @@ namespace SecurePassthroughPlayground
         public MainForm()
         {
             InitializeComponent();
-        
+
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -25,15 +25,24 @@ namespace SecurePassthroughPlayground
 
             try
             {
-                var collection = new X509Certificate2Collection();
-                //collection.Import(certPath.Text, pass.Text, X509KeyStorageFlags.PersistKeySet);
-                collection.Import(certPath.Text);
+                //log.Text = "";
 
                 //send this user data to the Parature DropOff Url (this is a server-side request)
                 var requestToPing = (HttpWebRequest)WebRequest.Create(url.Text);
                 requestToPing.Method = "POST";
                 requestToPing.PreAuthenticate = true;
-                requestToPing.ClientCertificates.Add(collection[0]);
+
+                var collection = new X509Certificate2Collection();
+                //collection.Import(certPath.Text, pass.Text, X509KeyStorageFlags.PersistKeySet);
+                collection.Import(certPath.Text);
+
+                foreach (var cert in collection)
+                {
+                    Log("including cert " + cert.SubjectName.Name);
+                    requestToPing.ClientCertificates.Add(cert);
+
+                }
+
                 requestToPing.Headers.Add(instanceIdParamName, instanceId.Text);
 
                 using (var sr = new StreamWriter(requestToPing.GetRequestStream()))
@@ -67,7 +76,7 @@ namespace SecurePassthroughPlayground
             }
             catch (Exception e1)
             {
-                log.Text = "";
+               
                 Log("Error: " + e1);
             }
         }
